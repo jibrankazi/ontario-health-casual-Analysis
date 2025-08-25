@@ -1,0 +1,6 @@
+# Python dependencies for causal analysis project
+pandas
+numpy
+matplotlib
+seaborn
+statsmodels
