@@ -1,0 +1,42 @@
+---
+title: "Causal Analysis of Ontario Health Intervention"
+output: html_document
+---
+
+## Introduction
+
+This R Markdown demonstrates causal analysis techniques for evaluating public health interventions in Ontario using Difference-in-Differences (DiD), Propensity Score Matching (PSM), and CausalImpact.
+
+## Packages
+
+```{r}
+# Load necessary packages
+library(tidyverse)
+library(MatchIt)
+library(broom)
+library(CausalImpact)
+```
+
+## Data Import
+
+Describe and import data from open sources (e.g., StatsCan tables, public health datasets).
+
+## Data Cleaning and EDA
+
+Explain and perform data cleaning steps and exploratory data analysis.
+
+## Propensity Score Matching
+
+Implement PSM using MatchIt to balance covariates between treated and control groups.
+
+## Difference-in-Differences
+
+Estimate treatment effects using a DiD regression model with robust standard errors.
+
+## Causal Impact Analysis
+
+Use the CausalImpact package to validate findings with a Bayesian structural time-series model.
+
+## Results and Discussion
+
+Summarize findings and discuss implications for policy makers.
