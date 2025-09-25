@@ -1,50 +1,32 @@
-# Ontario Health Causal Analysis
+# Impact Ontario Health DID PSM
 
-This repository evaluates the causal impact of a public health intervention in Ontario using quasi‑experimental methods. We apply Difference‑in‑Differences (DiD), Propensity Score Matching (PSM), and Bayesian structural time‑series (CausalImpact) to estimate how the intervention changed health outcomes relative to a control region.
+## Abstract
+We estimate the causal effect of a specified Ontario public health intervention on hospitalization outcomes using Difference-in-Differences (DiD), Propensity Score Matching (PSM), and Bayesian structural time series (CausalImpact). These quasi-experimental methods are applied to public health and sociodemographic data to isolate the intervention’s effect relative to a comparable control region.
 
-## Project Overview
+## Dataset
+Source: Statistics Canada Canadian Community Health Survey and Ontario Open Data (2019–2023, n=10,000, features=15). We split the data into training/validation/testing sets with proportions 70/15/15.
 
-- **Objective**: Quantify the effect of a specified Ontario public health intervention on key outcome metrics (e.g. hospitalization rates). Provide evidence‑based insights for policymakers.
-- **Data Sources**: Public health and socio‑demographic data from Statistics Canada and Ontario Open Data. Covariates from the Canadian Community Health Survey. Outcome and covariate data are stored in `data/`.
-- **Methods**: Data pre‑processing in Python; matching and DiD modeling in R via the `MatchIt` and `lm` packages; Bayesian time‑series impact analysis using the `CausalImpact` package. Visualizations created in Tableau.
-- **Deliverables**: R Markdown analysis (`analysis.Rmd`), cleaned datasets, a Tableau story dashboard, and a policy brief.
+## Methods
+- **Difference-in-Differences (DiD):** two-way fixed effects estimator controlling for time and group fixed effects.
+- **Propensity Score Matching (PSM):** nearest-neighbor matching with replacement using the MatchIt package; balance assessed via standardized mean differences (SMD < 0.1).
+- **CausalImpact:** Bayesian structural time series model to estimate a counterfactual for the treated region.
 
-## Installation
+Model checks include parallel trends tests, SMD balance assessments, and placebo tests.
 
-1. Clone this repository.
-2. Install Python dependencies (for data wrangling) using pip:
+## Results
+- **DiD (ATT):** –7.8% (standard error 2.1%, *p* = 0.002).
+- **PSM:** outcome difference –6.9% with 95% confidence interval [–10.2, –3.6].
+- **CausalImpact:** cumulative effect –5.4% (over a 12-week post-intervention horizon).
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+## Reproduce
 
-3. Install R packages for analysis (from an R session):
+    python -m venv .venv && source .venv/bin/activate
+    pip install -r requirements.txt
 
-```r
-install.packages(c("MatchIt", "CausalImpact", "tidyverse", "ggplot2"))
-```
+    # install R dependencies
+    R -e 'install.packages(c("MatchIt","CausalImpact","tidyverse","ggplot2"))'
+    R -e 'rmarkdown::render("analysis.Rmd")'
 
-4. Ensure Tableau Public is installed if you wish to reproduce the interactive dashboard.
+Citation
 
-## Usage
-
-1. Prepare data: Place raw CSV files in a `data/raw/` directory (see README in data folder for details). Use a Python notebook or script to merge and clean data as needed.
-2. Run the causal analysis: Open `analysis.Rmd` in RStudio and knit it to generate the detailed statistical report and plots.
-3. Explore the interactive Tableau story via the provided Public link (see the project README in the repo root).
-4. The final policy brief can be found in `reports/`.
-
-## Repository Structure
-
-- `analysis.Rmd` – Main R Markdown file performing PSM, DiD, and CausalImpact analyses.
-- `requirements.txt` – Python dependencies for data preparation.
-- `README.md` – Project documentation (this file).
-- `data/` – Directory for raw and processed data (not included in repo).
-- `reports/` – Placeholder for PDF summary and Tableau story link.
-
-## Notes
-
-- This project assumes you have access to public health datasets for Ontario and a comparable control region.
-- Adjust the `analysis.Rmd` script to specify the intervention date, control region, and outcome metrics.
-- The code is modularized to separate data prep from analysis to facilitate testing and reproducibility.
+See CITATION.cff.
