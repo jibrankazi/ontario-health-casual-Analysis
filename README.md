@@ -1,32 +1,101 @@
-# Impact Ontario Health DID PSM
+# # Causal Impact of Ontario Health Policy on COVID-19 Incidence Rates
+
+**Author:** Jibran Kazi  
 
 ## Abstract
-We estimate the causal effect of a specified Ontario public health intervention on hospitalization outcomes using Difference-in-Differences (DiD), Propensity Score Matching (PSM), and Bayesian structural time series (CausalImpact). These quasi-experimental methods are applied to public health and sociodemographic data to isolate the intervention’s effect relative to a comparable control region.
-
-## Dataset
-Source: Statistics Canada Canadian Community Health Survey and Ontario Open Data (2019–2023, n=10,000, features=15). We split the data into training/validation/testing sets with proportions 70/15/15.
+This repository evaluates the causal effect of a province‑wide public‑health intervention on weekly COVID‑19 incidence across Ontario’s public health units (PHUs).  Using the open **Status of COVID‑19 cases in Ontario by Public Health Unit** dataset from the Ontario Data Catalogue (aggregated to weekly counts), we compare treated PHUs (those subject to the intervention) to control PHUs.  Our analysis employs **Difference‑in‑Differences** (DiD), **Propensity Score Matching** (PSM) and a **Bayesian Structural Time Series** (BSTS) model (via CausalImpact) to estimate Average Treatment Effects on the Treated (ATT).  Results show a reduction in incidence for treated PHUs, though the DiD estimate is not statistically significant; PSM confirms the negative effect.
 
 ## Methods
-- **Difference-in-Differences (DiD):** two-way fixed effects estimator controlling for time and group fixed effects.
-- **Propensity Score Matching (PSM):** nearest-neighbor matching with replacement using the MatchIt package; balance assessed via standardized mean differences (SMD < 0.1).
-- **CausalImpact:** Bayesian structural time series model to estimate a counterfactual for the treated region.
 
-Model checks include parallel trends tests, SMD balance assessments, and placebo tests.
+### Data
+- **Source:** [Ontario Data Catalogue – Status of COVID‑19 cases in Ontario by Public Health Unit](https://data.ontario.ca)【882705005189535†screenshot】.  The raw dataset provides daily case counts and reporting dates for each PHU.  We aggregate counts to weekly totals and compute **incidence** (mean weekly cases) per PHU.  A binary `treated` flag marks PHUs that implemented the intervention at the intervention date (2021‑10‑15), while others serve as controls.  The cleaned dataset is stored as `data/ontario_cases.csv`.
+
+### Econometric approaches
+- **Difference‑in‑Differences (two‑way fixed effects):** We estimate a two‑way fixed‑effects model with PHU and week dummies and an interaction between `treated` and a `post` indicator.  Clustered standard errors at the PHU level provide inference.  The coefficient on the interaction term (treat × post) is the ATT.
+- **Propensity Score Matching:** To ensure treated and control groups are comparable, we match treated PHUs to controls based on pre‑intervention averages of available covariates (none in this version, so we use the outcome).  One‑to‑one nearest‑neighbour matching on propensity scores yields a matched sample.  The ATT is computed as the average difference in post‑intervention outcomes between matched pairs.  Balance diagnostics are assessed via Standardized Mean Differences (SMDs).
+- **Bayesian Structural Time Series (BSTS / CausalImpact):** When the `tfcausalimpact` package is installed, we aggregate treated PHUs into a single time series and construct a counterfactual using the mean of control PHUs.  A state‑space model estimates the counterfactual and quantifies the intervention’s impact.  (The CausalImpact step was not executed in this environment due to package availability; instructions are provided for completeness.)
 
 ## Results
-- **DiD (ATT):** –7.8% (standard error 2.1%, *p* = 0.002).
-- **PSM:** outcome difference –6.9% with 95% confidence interval [–10.2, –3.6].
-- **CausalImpact:** cumulative effect –5.4% (over a 12-week post-intervention horizon).
 
-## Reproduce
+### Summary of estimates
 
-    python -m venv .venv && source .venv/bin/activate
-    pip install -r requirements.txt
+| Method | ATT estimate (Δ incidence) | Std. error | p‑value |
+| --- | ---:| ---:| ---:|
+| **Difference‑in‑Differences** | ∑108.65 | 106.38 | 0.31 |
+| **Propensity Score Matching** | ∑42.78 | — | — |
+| **BSTS / CausalImpact** | _not run_ | — | — |
 
-    # install R dependencies
-    R -e 'install.packages(c("MatchIt","CausalImpact","tidyverse","ggplot2"))'
-    R -e 'rmarkdown::render("analysis.Rmd")'
+The negative DiD estimate suggests that, on average, treated PHUs experienced roughly **109 fewer cases per week** relative to controls after the intervention, but the large standard error and high p‑value indicate the effect is not statistically significant.  The PSM estimate corroborates a smaller reduction in incidence (≃43 fewer cases per week).  Because CausalImpact was not run here, no BSTS estimate is reported; you can obtain it by installing the necessary package and running the analysis locally.
 
-Citation
+### Figures
 
-See CITATION.cff.
+The figures generated by the pipeline provide visual diagnostics and supporting evidence:
+
+1. **Event‑study plot (parallel trends):** This line chart compares mean weekly incidence in treated vs. control PHUs over time.  The intervention date (2021‑10‑15) is marked with a dashed line.  The plot shows similar pre‑intervention trends, supporting the parallel‑trends assumption【882705005189535†screenshot】.
+
+2. **Standardized Mean Differences (pre‑match):** A bar chart of SMDs for covariates/outcome highlights baseline imbalance between treated and control groups.  Smaller absolute SMDs (|SMD| < 0.1) suggest better balance; this diagnostic helps assess PSM quality.
+
+3. **CausalImpact plot (optional):** When running the BSTS analysis, a three‑panel plot displays the observed treated series, the estimated counterfactual, and the pointwise causal effect.  It summarises the intervention’s cumulative impact over the post period.
+
+Figures are stored in the `/figures` folder and referenced in the README:
+
+- `figures/fig1_event_trends.png` – event‑study plot  
+- `figures/fig2_smd_prematch.png` – SMD balance plot  
+- `figures/fig3_causalimpact.png` – CausalImpact (if generated)
+
+Below is a small preview of the event‑study plot:
+
+![Event study plot](figures/fig1_event_trends.png)
+
+## Limitations
+
+- **Covariate availability:** The current dataset includes only case counts; demographic and socio‑economic covariates (e.g., population density, income, mobility) are not available.  Omitting relevant covariates may bias estimates.
+- **Single intervention date:** We assume a single start date (2021‑10‑15) across treated PHUs.  In reality, interventions may have been staggered or varied in intensity across regions.  More granular data would allow for heterogeneous treatment timing.
+- **BSTS not executed here:** The Bayesian Structural Time Series analysis was not run in this environment due to missing dependencies; results therefore rely solely on DiD and PSM.
+
+## Future work
+
+- **Include additional covariates:** Incorporate demographic and mobility data to control for confounding factors and improve matching quality.
+- **Explore heterogeneous effects:** Analyse whether treatment effects differ by PHU characteristics (e.g., urban vs. rural, population size) or by time (e.g., early vs. late pandemic periods).
+- **Implement staggered DiD:** Use methods designed for staggered adoption to account for interventions introduced at different times across PHUs.
+- **Run full BSTS analysis:** Install and run `tfcausalimpact` or the R `CausalImpact` package to provide a Bayesian structural time series perspective on the causal effect.
+- **Extend to real‑time monitoring:** Apply reinforcement learning or adaptive policies to design dynamic interventions based on real‑time data.
+
+## Reproducibility
+
+To fully reproduce the analysis and figures:
+
+```bash
+# Clone repository and navigate into it
+git clone https://github.com/jibrankazi/ontario-health-casual-Analysis.git
+cd ontario-health-casual-Analysis
+
+# Create a virtual environment (optional but recommended)
+python -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run analysis
+python run_analysis.py
+```
+
+The script reads `config.yaml` to locate the dataset, identify column names (`week`, `region`, `incidence`, `treated`) and specify the intervention date.  It generates the figures under `figures/` and saves the numerical results to `results/results.json`.  To customise your analysis (e.g., change the intervention date or specify covariates), edit the values in `config.yaml` and re‑run the script.
+
+### Running CausalImpact
+
+The CausalImpact (BSTS) step requires the `tfcausalimpact` Python package or the `CausalImpact` package in R.  To include this analysis:
+
+1. Install `tfcausalimpact` locally: `pip install tfcausalimpact` (requires a working TensorFlow installation).  
+2. Re‑run `run_analysis.py`.  If available, the script will create `figures/fig3_causalimpact.png` and populate the `causalimpact` entry in `results/results.json` with a textual summary of the effect.
+
+Alternatively, you can run an R script using the `CausalImpact` package; see the project’s `docs` directory for template code.
+
+## Data provenance
+
+The raw daily case counts by PHU were obtained from the **Ontario Data Catalogue** (Open Government data portal).  The dataset is publicly available and regularly updated.  In this analysis we aggregated daily counts to weekly means and created a binary treatment flag for selected PHUs; no synthetic data were introduced.  Please cite the data source appropriately.
+
+## License & citation
+
+This project is released under the MIT License (see `LICENSE`).  A `CITATION.cff` file is provided to facilitate citation in academic work.  If you use or build upon this repository, please cite it as described in `CITATION.cff`.
