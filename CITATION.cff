@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+authors:
+  - family-names: Kazi
+    given-names: Jibran
+title: "Causal Impact of Ontario Health Policy on COVID-19 Incidence Rates"
+year: 2025
+url: "https://github.com/jibrankazi/ontario-health-casual-Analysis"
+version: "1.0.0"
