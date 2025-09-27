@@ -1,0 +1,7 @@
+{
+  "did_att": -108.64684159384905,
+  "did_se": 106.37526681529754,
+  "did_p": 0.30708658463720884,
+  "psm_att": -42.78108958837775,
+  "causalimpact": "Skipped CausalImpact (No module named 'causalimpact')"
+}
